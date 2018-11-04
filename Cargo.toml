@@ -7,5 +7,5 @@ edition = "2018"
 [dependencies]
 gnuplot = "0.0.26"
 dinotree = "0.1.1"
-dinotree_alg = {path="../dinotree_alg"}
+dinotree_alg = "0.1.0"
 axgeom = "1.0.1"
