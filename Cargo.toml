@@ -1,0 +1,11 @@
+[package]
+name = "dinotree_measure"
+version = "0.1.0"
+authors = ["Ken Reed <kenakioreed@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+gnuplot = "0.0.26"
+dinotree = "0.1.1"
+dinotree_alg = {path="../dinotree_alg"}
+axgeom = "1.0.1"
