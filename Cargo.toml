@@ -2,7 +2,6 @@
 name = "dinotree_measure"
 version = "0.1.0"
 authors = ["Ken Reed <kenakioreed@gmail.com>"]
-edition = "2018"
 
 [dependencies]
 gnuplot = "0.0.26"
