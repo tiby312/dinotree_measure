@@ -13,19 +13,62 @@ use std::time::Instant;
 
 use gnuplot::*;
 
+
+
+pub struct DinoTreeCache<A:AxisTrait,T:HasAabb>{
+	axis:A,
+	a:Option<DinoTree<A,(),T>>,
+	counter:bool
+}
+
+impl<A:AxisTrait,T:Copy,Num:NumTrait> DinoTreeCache<A,BBox<Num,T>>{
+	pub fn new(axis:A)->DinoTreeCache<A,BBox<Num,T>>{
+		DinoTreeCache{a:None,axis,counter:true}
+	}
+
+	pub fn get_tree_normal(&mut self,bots:&[T],func:impl FnMut(&T)->axgeom::Rect<Num>)->&mut DinoTree<A,(),BBox<Num,T>>{
+		self.a=Some(DinoTree::new(self.axis,(),bots,func));
+		return self.a.as_mut().unwrap()
+	}
+	pub fn get_tree(&mut self,bots:&[T],func:impl FnMut(&T)->axgeom::Rect<Num>)->&mut DinoTree<A,(),BBox<Num,T>>{
+		if self.a.is_none(){
+			assert_eq!(self.counter,true);
+			let tree=DinoTree::new(self.axis,(),bots,func);
+			self.a=Some(tree);
+			self.counter=false;
+			return self.a.as_mut().unwrap();	
+		}
+
+		if self.counter == true{
+			self.a=Some(DinoTree::new(self.axis,(),bots,func));
+			//println!("a");
+		}else{
+			self.a.as_mut().unwrap().apply_into(bots,|a,b|b.inner=*a);
+			//Need to apply bots here
+			//println!("b");
+		}
+
+		self.counter=!self.counter;
+
+		return self.a.as_mut().unwrap();
+	}
+}
+
+
+
 fn into_secs(elapsed:std::time::Duration)->f64{
     let sec = (elapsed.as_secs() as f64) + (elapsed.subsec_nanos() as f64 / 1000_000_000.0);
     sec
 }
 
 struct Round{
-	//rebal:Vec<f64>,
-	//query:Vec<f64>
 	rebal:f64,
 	query:f64
 }
 
 pub struct Session{
+	//tree:DinoTreeCache<axgeom::YAXISS,T:HasAabb>
+	//tree:DinoTree<axgeom::YAXISS,T>
 	times:Vec<Round>
 }
 
@@ -119,8 +162,7 @@ impl<A:AxisTrait,T:HasAabb+Send> DinoTreeMeasure<A,T>{
 	}
 	pub fn query_mut(&mut self,session:&mut Session,func:impl Fn(&mut T,&mut T)+Copy+Clone+Send){
 		let instant=Instant::now();
-
-		dinotree_alg::colfind::query_mut(&mut self.tree,func);
+		dinotree_alg::colfind::query_mut(self.tree.as_ref_mut(),func);
 		let time=into_secs(instant.elapsed());
 		session.times.push(Round{rebal:self.time.take().unwrap(),query:time});
 		/*
